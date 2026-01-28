@@ -29,11 +29,20 @@ HEADERS = {
 }
 
 
-def format_price(amount: int) -> str:
-    """Format price in Indian Lakh format."""
+def format_price_inr(amount: float) -> str:
+    """Format price in Indian format with commas."""
+    amount = int(amount)
     if amount >= 100000:
-        lakhs = amount / 100000
-        return f"₹{lakhs:.2f} Lakh"
+        # Format in lakhs: 15,74,658
+        s = str(amount)
+        # Last 3 digits
+        result = s[-3:]
+        s = s[:-3]
+        # Then groups of 2
+        while s:
+            result = s[-2:] + "," + result
+            s = s[:-2]
+        return f"₹{result}"
     return f"₹{amount:,}"
 
 
@@ -47,43 +56,91 @@ def run() -> str | None:
     try:
         response = requests.get(API_URL, headers=HEADERS, timeout=30)
         response.raise_for_status()
-        data = response.json()
+        resp_data = response.json()
         
-        # Extract price information
-        result = data.get("result", {})
+        if not resp_data.get("is_success"):
+            print("API returned unsuccessful response")
+            return None
         
-        # Get car details
-        car_name = result.get("car_name", "Unknown Car")
+        data = resp_data.get("data", {})
         
-        # Get price breakdown
-        price_breakup = result.get("price_breakup", [])
+        # Extract car details
+        make = data.get("make", "Unknown")
+        model = data.get("model", "Unknown")
+        variant_data = data.get("variant", {})
+        variant = variant_data.get("display_name", "") if isinstance(variant_data, dict) else ""
+        year = data.get("make_year", "")
+        mileage = data.get("mileage", "N/A")
+        fuel = data.get("fuel_type", "").capitalize()
+        transmission = data.get("transmission", "").capitalize()
+        
+        car_name = f"{year} {make} {model}"
+        if variant:
+            car_name += f" {variant}"
+        
+        # Extract pricing
+        pricing = data.get("pricing", {})
+        listing_price_str = pricing.get("listing_price", {}).get("price", "N/A")
+        market_price_str = pricing.get("market_price", {}).get("price", "N/A")
+        savings_msg = pricing.get("market_price", {}).get("message", "")
+        
+        # Extract price breakdown
+        pb = data.get("price_breakdown_v2", {})
+        listing_price = pb.get("listing_price", 0)
+        base_price = pb.get("base_listing_price", 0)
+        tax_data = pb.get("tax_data", {})
+        tax_amount = tax_data.get("numeric_value", 0)
+        
+        # Get add-ons breakdown
+        base_add_ons = pb.get("base_add_on_data_list", [])
+        add_on_total = 0
+        add_on_items = []
+        for addon in base_add_ons:
+            if addon.get("name") == "base_add_on":
+                add_on_total = addon.get("value", 0)
+                on_click = addon.get("on_click", [])
+                if on_click:
+                    for item in on_click:
+                        add_on_items.append({
+                            "name": item.get("display_name", ""),
+                            "value": item.get("value", 0)
+                        })
         
         # Build message
         lines = [
             "<b>🚗 Spinny Car Price Update</b>",
             "",
-            f"<b>Car:</b> {car_name}",
+            f"<b>{car_name}</b>",
+            f"📍 {fuel} | {transmission} | {mileage} km",
             "",
-            "<b>Price Breakdown:</b>",
+            "<b>💰 Pricing:</b>",
+            f"• Spinny Price: <b>₹{listing_price_str}</b>",
+            f"• Market Price: ₹{market_price_str}",
         ]
         
-        total_price = 0
-        for item in price_breakup:
-            label = item.get("label", "")
-            value = item.get("value", 0)
-            is_total = item.get("is_total", False)
-            
-            if is_total:
-                total_price = value
-                lines.append("")
-                lines.append(f"<b>💰 {label}: {format_price(value)}</b>")
-            else:
-                lines.append(f"• {label}: {format_price(value)}")
+        if savings_msg:
+            # Extract savings amount
+            lines.append(f"• <i>{savings_msg}</i>")
+        
+        lines.append("")
+        lines.append("<b>📋 Price Breakdown:</b>")
+        lines.append(f"• Base Price: {format_price_inr(base_price)}")
+        
+        if add_on_items:
+            lines.append(f"• Add-ons ({format_price_inr(add_on_total)}):")
+            for item in add_on_items:
+                lines.append(f"   - {item['name']}: {format_price_inr(item['value'])}")
+        
+        if tax_amount:
+            lines.append(f"• Taxes: {format_price_inr(tax_amount)}")
+        
+        lines.append("")
+        lines.append(f"<b>Total: {format_price_inr(listing_price)}</b>")
         
         # Add link to listing
         listing_url = f"https://www.spinny.com/buy-used-cars/-d{CAR_ID}"
         lines.append("")
-        lines.append(f"<a href='{listing_url}'>View on Spinny</a>")
+        lines.append(f"🔗 <a href='{listing_url}'>View on Spinny</a>")
         
         # Add timestamp
         now = datetime.now().strftime("%d %b %Y, %I:%M %p")
@@ -97,6 +154,8 @@ def run() -> str | None:
         return None
     except (KeyError, TypeError) as e:
         print(f"Failed to parse Spinny response: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
