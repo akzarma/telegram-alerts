@@ -74,6 +74,12 @@ def run() -> str | None:
         fuel = data.get("fuel_type", "").capitalize()
         transmission = data.get("transmission", "").capitalize()
         
+        # Extract availability status
+        is_booked = data.get("booked", False)
+        is_sold = data.get("sold", False)
+        is_on_hold = data.get("on_hold", False)
+        listing_status = data.get("listing_status", "unknown")
+        
         car_name = f"{year} {make} {model}"
         if variant:
             car_name += f" {variant}"
@@ -106,12 +112,28 @@ def run() -> str | None:
                             "value": item.get("value", 0)
                         })
         
+        # Determine availability status
+        if is_sold:
+            status_emoji = "🔴"
+            status_text = "SOLD"
+        elif is_booked:
+            status_emoji = "🟡"
+            status_text = "BOOKED"
+        elif is_on_hold:
+            status_emoji = "🟠"
+            status_text = "ON HOLD"
+        else:
+            status_emoji = "🟢"
+            status_text = "AVAILABLE"
+        
         # Build message
         lines = [
             "<b>🚗 Spinny Car Price Update</b>",
             "",
             f"<b>{car_name}</b>",
             f"📍 {fuel} | {transmission} | {mileage} km",
+            "",
+            f"<b>Status:</b> {status_emoji} {status_text}",
             "",
             "<b>💰 Pricing:</b>",
             f"• Spinny Price: <b>₹{listing_price_str}</b>",
