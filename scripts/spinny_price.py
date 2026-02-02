@@ -83,8 +83,12 @@ def format_car_summary(data: dict, car_id: str) -> str:
     if variant:
         car_name += f" {variant}"
     
-    # Listing URL
-    url = f"https://www.spinny.com/buy-used-cars/-d{car_id}"
+    # Listing URL - use permanent_url from API, fallback to basic format
+    permanent_url = data.get("permanent_url", "")
+    if permanent_url:
+        url = f"https://www.spinny.com{permanent_url}"
+    else:
+        url = f"https://www.spinny.com/buy-used-cars/-d{car_id}"
     
     # Compact format
     lines = [
