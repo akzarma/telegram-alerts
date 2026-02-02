@@ -34,6 +34,10 @@ def get_status(data: dict) -> tuple[str, str]:
         return "🟡", "BOOKED"
     elif data.get("on_hold"):
         return "🟠", "ON HOLD"
+    elif data.get("soft_unpublish") or data.get("listing_status") == "unpublished":
+        return "🔵", "UNAVAILABLE"
+    elif data.get("upcoming"):
+        return "⚪", "UPCOMING"
     return "🟢", "AVAILABLE"
 
 
