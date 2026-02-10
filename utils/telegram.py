@@ -31,6 +31,8 @@ def send_message(text: str, parse_mode: str = "HTML") -> bool:
         "chat_id": chat_id,
         "text": text,
         "parse_mode": parse_mode,
+        "disable_notification": True,
+        "disable_web_page_preview": True,
     }
     
     try:

@@ -141,6 +141,8 @@ async function sendTelegramMessage(chatId: number, text: string): Promise<void> 
       chat_id: chatId,
       text: text,
       parse_mode: "HTML",
+      disable_notification: true,
+      disable_web_page_preview: true,
     }),
   });
 }
