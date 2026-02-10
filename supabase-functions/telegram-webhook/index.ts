@@ -17,6 +17,84 @@ const TRIGGER_COMMANDS = [
   "check price",
 ];
 
+// Hair schedule – IST (UTC+5:30)
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const NIGHT_BY_DAY: Record<number, string> = {
+  0: "Ketoconazole 2% (1) overnight → wash with regular shampoo next day",
+  1: "Nidcort-CS (2) overnight → shampoo next day",
+  2: "Ketoclenz CT (3) — 5 min scalp, then regular shampoo",
+  3: "Nidcort-CS (2) overnight → shampoo next day",
+  4: "Ketoclenz CT (3) — 5 min, then regular shampoo",
+  5: "Nidcort-CS (2) overnight → shampoo next day",
+  6: "Ketoclenz CT (3) — 5 min, then regular shampoo",
+};
+
+function getIST(): { day: number; hour: number; minute: number } {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const ist = new Date(utc + 5.5 * 60 * 60 * 1000);
+  return {
+    day: ist.getDay(),
+    hour: ist.getHours(),
+    minute: ist.getMinutes(),
+  };
+}
+
+function getTodaysPlan(day: number): string {
+  const dayName = DAYS[day];
+  const lunch = day === 5 ? "Meganeuron OD+ + Uprise D3" : "Meganeuron OD+";
+  const night = NIGHT_BY_DAY[day] ?? "";
+  return (
+    "<b>📋 Today's plan – " + dayName + "</b>\n\n" +
+    "<pre>" +
+    "Time    | Slot    | Medicine / Action\n" +
+    "--------|---------|----------------------------------------\n" +
+    "08:00   | Morning | Trichogain 1 cap (after breakfast)\n" +
+    "08:00   | Morning | AGA Pro 6 sprays\n" +
+    "14:00   | Lunch   | " + lunch + "\n" +
+    "19:00   | Evening | AGA Pro 6 sprays\n" +
+    "21:00   | Night   | " + night + "\n" +
+    "</pre>"
+  );
+}
+
+function getNextSlot(day: number, hour: number, minute: number): string {
+  const dayName = DAYS[day];
+  const slots: { hour: number; min: number; label: string; item: string }[] = [
+    { hour: 8, min: 0, label: "Morning", item: "Trichogain 1 cap (after breakfast), AGA Pro 6 sprays" },
+    { hour: 14, min: 0, label: "Lunch", item: day === 5 ? "Meganeuron OD+ + Uprise D3" : "Meganeuron OD+" },
+    { hour: 19, min: 0, label: "Evening", item: "AGA Pro 6 sprays" },
+    { hour: 21, min: 0, label: "Night", item: NIGHT_BY_DAY[day] ?? "" },
+  ];
+  const nowMins = hour * 60 + minute;
+  for (const s of slots) {
+    const slotMins = s.hour * 60 + s.min;
+    if (slotMins > nowMins || (slotMins === nowMins)) {
+      const time = String(s.hour).padStart(2, "0") + ":" + String(s.min).padStart(2, "0");
+      return (
+        "<b>⏭ Next: " + dayName + " " + time + " – " + s.label + "</b>\n\n" +
+        "<b>" + s.item + "</b>"
+      );
+    }
+  }
+  const tomorrow = (day + 1) % 7;
+  const nextDayName = DAYS[tomorrow];
+  const first = slots[0];
+  return (
+    "<b>⏭ Next: " + nextDayName + " 08:00 – Morning</b>\n\n" +
+    "<b>" + first.item + "</b>"
+  );
+}
+
+function isHairScheduleQuery(text: string): "today" | "next" | false {
+  const t = text.replace(/[?\s]+/g, " ").trim();
+  if (/\b(today'?s? plan|today plan|what'?s? today'?s? plan)\b/i.test(t)) return "today";
+  if (/\b(hair schedule|hair plan)\b/i.test(t) && (/\b(today|plan)\b/i.test(t) || t.length < 25)) return "today";
+  if (/\bwhat'?s? next\b/i.test(t) && (/\bhair\b/i.test(t) || /\bschedule\b/i.test(t))) return "next";
+  if (/\bwhat'?s? next\b/i.test(t) && t.length < 30) return "next";
+  return false;
+}
+
 interface TelegramMessage {
   message?: {
     chat: { id: number };
@@ -103,8 +181,18 @@ Deno.serve(async (req: Request) => {
         "• /help - Show this help\n\n" +
         "You can also say:\n" +
         "• \"car price update\"\n" +
-        "• \"check price\""
+        "• \"check price\"\n\n" +
+        "<b>📋 Hair schedule</b>\n" +
+        "• \"What's today's plan?\" – full plan for today\n" +
+        "• \"What's next? Hair schedule?\" – next upcoming item"
       );
+    } else {
+      const hair = isHairScheduleQuery(text);
+      if (hair) {
+        const ist = getIST();
+        const msg = hair === "today" ? getTodaysPlan(ist.day) : getNextSlot(ist.day, ist.hour, ist.minute);
+        await sendTelegramMessage(chatId, msg);
+      }
     }
 
     return new Response("OK", { status: 200 });

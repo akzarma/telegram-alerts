@@ -1,0 +1,68 @@
+# Hair schedule reminders – triggered by cron-job.org (same pattern as daily car price)
+name: Hair Schedule
+
+on:
+  repository_dispatch:
+    types:
+      - hair-schedule-morning
+      - hair-schedule-lunch
+      - hair-schedule-evening
+      - hair-schedule-night
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 'Which slot to send (morning/lunch/evening/night)'
+        required: true
+        default: 'morning'
+        type: choice
+        options:
+          - morning
+          - lunch
+          - evening
+          - night
+
+jobs:
+  send-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install -r requirements.txt
+
+      - name: Send reminder
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "
+          import sys
+          from scripts.hair_schedule import run_morning, run_lunch, run_evening, run_night
+          from utils.telegram import send_message
+
+          # Determine slot from dispatch event type or workflow_dispatch input
+          event = '${{ github.event.action }}'
+          input_slot = '${{ github.event.inputs.slot }}'
+
+          slot_map = {
+              'hair-schedule-morning': run_morning,
+              'hair-schedule-lunch': run_lunch,
+              'hair-schedule-evening': run_evening,
+              'hair-schedule-night': run_night,
+          }
+          input_map = {
+              'morning': run_morning,
+              'lunch': run_lunch,
+              'evening': run_evening,
+              'night': run_night,
+          }
+
+          fn = slot_map.get(event) or input_map.get(input_slot) or run_morning
+          msg = fn()
+          print(f'Sending: {msg}')
+          ok = send_message(msg)
+          sys.exit(0 if ok else 1)
+          "
