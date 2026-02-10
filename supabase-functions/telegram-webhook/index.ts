@@ -19,15 +19,17 @@ const TRIGGER_COMMANDS = [
 
 // Hair schedule – IST (UTC+5:30)
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// Night (9 PM): only overnight items — no washing/bathing at night
 const NIGHT_BY_DAY: Record<number, string> = {
-  0: "Ketoconazole 2% (1) overnight → wash with regular shampoo next day",
+  0: "Ketoconazole 2% (1) overnight → wash next day",
   1: "Nidcort-CS (2) overnight → shampoo next day",
-  2: "Ketoclenz CT (3) — 5 min scalp, then regular shampoo",
   3: "Nidcort-CS (2) overnight → shampoo next day",
-  4: "Ketoclenz CT (3) — 5 min, then regular shampoo",
   5: "Nidcort-CS (2) overnight → shampoo next day",
-  6: "Ketoclenz CT (3) — 5 min, then regular shampoo",
 };
+
+// Bath (10 AM): Ketoclenz CT wash on Tue/Thu/Sat only
+const BATH_DAYS = new Set([2, 4, 6]); // JS getDay: Tue=2, Thu=4, Sat=6
 
 function getIST(): { day: number; hour: number; minute: number } {
   const now = new Date();
@@ -43,46 +45,72 @@ function getIST(): { day: number; hour: number; minute: number } {
 function getTodaysPlan(day: number): string {
   const dayName = DAYS[day];
   const lunch = day === 5 ? "Meganeuron OD+ + Uprise D3" : "Meganeuron OD+";
-  const night = NIGHT_BY_DAY[day] ?? "";
+  const night = NIGHT_BY_DAY[day] ?? "—";
+  const hasBath = BATH_DAYS.has(day);
+  const bathLine = hasBath
+    ? " 10 AM  | Bath    | Ketoclenz CT (3) 5 min + regular shampoo\n"
+    : "";
+  const nightLine = night !== "—"
+    ? " 9 PM   | Night   | " + night + "\n"
+    : "";
   return (
     "<b>📋 Today's plan – " + dayName + "</b>\n\n" +
     "<pre>" +
-    "Time    | Slot    | Medicine / Action\n" +
-    "--------|---------|----------------------------------------\n" +
-    "08:00   | Morning | Trichogain 1 cap (after breakfast)\n" +
-    "08:00   | Morning | AGA Pro 6 sprays\n" +
-    "14:00   | Lunch   | " + lunch + "\n" +
-    "19:00   | Evening | AGA Pro 6 sprays\n" +
-    "21:00   | Night   | " + night + "\n" +
+    "Time   | Slot    | Medicine / Action\n" +
+    "-------|---------|----------------------------------------\n" +
+    " 8 AM  | Morning | Trichogain 1 cap (after breakfast)\n" +
+    " 8 AM  | Morning | AGA Pro 6 sprays\n" +
+    bathLine +
+    " 2 PM  | Lunch   | " + lunch + "\n" +
+    " 7 PM  | Evening | AGA Pro 6 sprays\n" +
+    nightLine +
     "</pre>"
   );
 }
 
+function formatTime12hr(hour: number): string {
+  if (hour === 0) return "12 AM";
+  if (hour < 12) return hour + " AM";
+  if (hour === 12) return "12 PM";
+  return (hour - 12) + " PM";
+}
+
 function getNextSlot(day: number, hour: number, minute: number): string {
   const dayName = DAYS[day];
+  const hasBath = BATH_DAYS.has(day);
+  const hasNight = day in NIGHT_BY_DAY;
+
   const slots: { hour: number; min: number; label: string; item: string }[] = [
     { hour: 8, min: 0, label: "Morning", item: "Trichogain 1 cap (after breakfast), AGA Pro 6 sprays" },
+  ];
+  if (hasBath) {
+    slots.push({ hour: 10, min: 0, label: "Bath", item: "Ketoclenz CT (3) – 5 min on scalp, then regular shampoo" });
+  }
+  slots.push(
     { hour: 14, min: 0, label: "Lunch", item: day === 5 ? "Meganeuron OD+ + Uprise D3" : "Meganeuron OD+" },
     { hour: 19, min: 0, label: "Evening", item: "AGA Pro 6 sprays" },
-    { hour: 21, min: 0, label: "Night", item: NIGHT_BY_DAY[day] ?? "" },
-  ];
+  );
+  if (hasNight) {
+    slots.push({ hour: 21, min: 0, label: "Night", item: NIGHT_BY_DAY[day] ?? "" });
+  }
+
   const nowMins = hour * 60 + minute;
   for (const s of slots) {
     const slotMins = s.hour * 60 + s.min;
     if (slotMins > nowMins || (slotMins === nowMins)) {
-      const time = String(s.hour).padStart(2, "0") + ":" + String(s.min).padStart(2, "0");
+      const time = formatTime12hr(s.hour);
       return (
         "<b>⏭ Next: " + dayName + " " + time + " – " + s.label + "</b>\n\n" +
         "<b>" + s.item + "</b>"
       );
     }
   }
+  // All today's slots passed → show tomorrow's first slot
   const tomorrow = (day + 1) % 7;
   const nextDayName = DAYS[tomorrow];
-  const first = slots[0];
   return (
-    "<b>⏭ Next: " + nextDayName + " 08:00 – Morning</b>\n\n" +
-    "<b>" + first.item + "</b>"
+    "<b>⏭ Next: " + nextDayName + " 8 AM – Morning</b>\n\n" +
+    "<b>Trichogain 1 cap (after breakfast), AGA Pro 6 sprays</b>"
   );
 }
 
@@ -176,15 +204,15 @@ Deno.serve(async (req: Request) => {
         chatId,
         "<b>🚗 Spinny Price Bot</b>\n\n" +
         "Commands:\n" +
-        "• /update - Get latest car prices\n" +
-        "• /price - Get latest car prices\n" +
-        "• /help - Show this help\n\n" +
+        "• /update – Get latest car prices\n" +
+        "• /price – Get latest car prices\n" +
+        "• /help – Show this help\n\n" +
         "You can also say:\n" +
         "• \"car price update\"\n" +
         "• \"check price\"\n\n" +
         "<b>📋 Hair schedule</b>\n" +
         "• \"What's today's plan?\" – full plan for today\n" +
-        "• \"What's next? Hair schedule?\" – next upcoming item"
+        "• \"What's next?\" – next upcoming item"
       );
     } else {
       const hair = isHairScheduleQuery(text);

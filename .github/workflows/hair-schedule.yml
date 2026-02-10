@@ -5,18 +5,20 @@ on:
   repository_dispatch:
     types:
       - hair-schedule-morning
+      - hair-schedule-bath
       - hair-schedule-lunch
       - hair-schedule-evening
       - hair-schedule-night
   workflow_dispatch:
     inputs:
       slot:
-        description: 'Which slot to send (morning/lunch/evening/night)'
+        description: 'Which slot to send (morning/bath/lunch/evening/night)'
         required: true
         default: 'morning'
         type: choice
         options:
           - morning
+          - bath
           - lunch
           - evening
           - night
@@ -40,7 +42,7 @@ jobs:
         run: |
           python -c "
           import sys
-          from scripts.hair_schedule import run_morning, run_lunch, run_evening, run_night
+          from scripts.hair_schedule import run_morning, run_bath, run_lunch, run_evening, run_night
           from utils.telegram import send_message
 
           # Determine slot from dispatch event type or workflow_dispatch input
@@ -49,12 +51,14 @@ jobs:
 
           slot_map = {
               'hair-schedule-morning': run_morning,
+              'hair-schedule-bath': run_bath,
               'hair-schedule-lunch': run_lunch,
               'hair-schedule-evening': run_evening,
               'hair-schedule-night': run_night,
           }
           input_map = {
               'morning': run_morning,
+              'bath': run_bath,
               'lunch': run_lunch,
               'evening': run_evening,
               'night': run_night,
@@ -62,6 +66,9 @@ jobs:
 
           fn = slot_map.get(event) or input_map.get(input_slot) or run_morning
           msg = fn()
+          if not msg:
+              print('No reminder for this slot today (empty message). Skipping.')
+              sys.exit(0)
           print(f'Sending: {msg}')
           ok = send_message(msg)
           sys.exit(0 if ok else 1)

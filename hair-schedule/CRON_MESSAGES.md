@@ -1,36 +1,42 @@
 # Hair schedule – Telegram reminder messages (IST)
 
-Times (IST): Morning 8:00 | Lunch 14:00 | Evening 19:00 | Night 21:00
+Times (IST): Morning 8 AM | Bath 10 AM (Tue/Thu/Sat) | Lunch 2 PM | Evening 7 PM | Night 9 PM (Mon/Wed/Fri/Sun)
 
 ---
 
-## First cron: **Morning – 8:00 AM IST** (for your approval)
-
-Same message every day (Trichogain + AGA Pro):
+## Morning – 8 AM IST (daily)
 
 ```
-🌅 Hair schedule – Morning (8:00 AM)
+🌅 Hair schedule – Morning 8 AM
 • Trichogain 1 cap (after breakfast)
 • AGA Pro 6 sprays
 ```
 
-If you approve this, we’ll create one cron job that runs daily at 8:00 AM IST and sends this to your E-Akshay Telegram bot.
+## Bath – 10 AM IST (Tue / Thu / Sat only)
 
----
+```
+🚿 Hair schedule – Bath 10 AM
+• Ketoclenz CT (3) – 5 min on scalp
+• Then wash with regular shampoo
+```
 
-## Other slots (to add after first is approved)
+## Lunch – 2 PM IST (daily)
 
-**Lunch – 2:00 PM IST**  
-- Tue–Thu, Sat–Sun: Meganeuron OD+  
-- Fri: Meganeuron OD+ + Uprise D3  
+```
+💊 Hair schedule – After lunch 2 PM
+• Meganeuron OD+
+(Fri only: + Uprise D3)
+```
 
-**Evening – 7:00 PM IST**  
-- Every day: AGA Pro 6 sprays  
+## Evening – 7 PM IST (daily)
 
-**Night – 9:00 PM IST** (day-specific)  
-- Mon: Nidcort-CS overnight  
-- Tue, Thu, Sat: Ketoclenz CT (5 min) then regular shampoo  
-- Wed, Fri: Nidcort-CS overnight  
-- Sun: Ketoconazole 2% overnight  
+```
+🌇 Hair schedule – Evening 7 PM
+• AGA Pro 6 sprays
+```
 
-Reply "approved" (or with edits) for the morning message; then we’ll create that cron and repeat for the rest.
+## Night – 9 PM IST (Mon/Wed/Fri/Sun only — overnight items)
+
+- Mon/Wed/Fri: Nidcort-CS (2) overnight → shampoo next day
+- Sun: Ketoconazole 2% (1) overnight → wash next day
+- Tue/Thu/Sat: no night reminder (Ketoclenz CT moved to 10 AM bath)

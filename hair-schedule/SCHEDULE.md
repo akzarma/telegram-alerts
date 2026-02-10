@@ -19,25 +19,33 @@
 
 | Time (IST) | Item | Notes |
 |------------|------|--------|
-| **Morning** (e.g. 8:00) | Trichogain (5) 1 cap | After breakfast |
-| **Morning** | AGA Pro (4) 6 sprays | — |
-| **After lunch** | Meganeuron OD+ (6) | Daily |
-| **After lunch (Fri only)** | Uprise D3 (7) | Weekly, Friday |
-| **Evening** (e.g. 19:00) | AGA Pro (4) 6 sprays | — |
+| **8 AM** (Morning) | Trichogain (5) 1 cap | After breakfast |
+| **8 AM** (Morning) | AGA Pro (4) 6 sprays | — |
+| **2 PM** (After lunch) | Meganeuron OD+ (6) | Daily |
+| **2 PM** (Fri only) | Uprise D3 (7) | Weekly, Friday |
+| **7 PM** (Evening) | AGA Pro (4) 6 sprays | — |
 
 ---
 
-## Night (by day)
+## Bath – 10 AM (Tue / Thu / Sat)
 
-| Day | Night (overnight / before bed) |
-|-----|--------------------------------|
+| Day | 10 AM (Bath) |
+|-----|--------------|
+| **Tue** | Ketoclenz CT (3) — 5 min on scalp, then **regular shampoo** |
+| **Thu** | Ketoclenz CT (3) — 5 min on scalp, then **regular shampoo** |
+| **Sat** | Ketoclenz CT (3) — 5 min on scalp, then **regular shampoo** |
+
+---
+
+## Night – 9 PM (overnight items only)
+
+| Day | 9 PM (Night) |
+|-----|--------------|
 | **Mon** | Nidcort-CS (2) overnight → shampoo next day |
-| **Tue** | Ketoclenz CT (3) — 5 min scalp, then **regular shampoo** |
 | **Wed** | Nidcort-CS (2) overnight → shampoo next day |
-| **Thu** | Ketoclenz CT (3) — 5 min, then **regular shampoo** |
 | **Fri** | Nidcort-CS (2) overnight → shampoo next day |
-| **Sat** | Ketoclenz CT (3) — 5 min, then **regular shampoo** |
 | **Sun** | Ketoconazole 2% (1) overnight → wash with regular shampoo next day |
+| Tue / Thu / Sat | — (no night item) |
 
 ---
 
