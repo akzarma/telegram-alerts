@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 // Configuration - set these as Supabase Edge Function secrets
 // supabase secrets set TELEGRAM_BOT_TOKEN=xxx GITHUB_TOKEN=xxx
-const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "8471959636:AAEP12fzCELcYBGHAyuI4Z_fsysa_QCqHu8";
+const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")!;
 const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN")!;
 const GITHUB_REPO = "akzarma/telegram-alerts";
 const ALLOWED_CHAT_ID = Number(Deno.env.get("ALLOWED_CHAT_ID")) || 676465574;
@@ -132,18 +132,20 @@ interface TelegramMessage {
   };
 }
 
-async function sendTelegramMessage(chatId: number, text: string): Promise<void> {
+async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: unknown): Promise<void> {
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const payload: Record<string, unknown> = {
+    chat_id: chatId,
+    text: text,
+    parse_mode: "HTML",
+    disable_notification: true,
+    disable_web_page_preview: true,
+  };
+  if (replyMarkup) payload.reply_markup = replyMarkup;
   await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: text,
-      parse_mode: "HTML",
-      disable_notification: true,
-      disable_web_page_preview: true,
-    }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -203,20 +205,26 @@ Deno.serve(async (req: Request) => {
       }
       // If success, the workflow will send the actual price update
     } else if (text === "/help" || text === "help") {
+      const keyboard = {
+        keyboard: [
+          [{ text: "What's today's plan?" }, { text: "What's tomorrow's plan?" }],
+          [{ text: "What's next?" }, { text: "/update" }],
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false,
+      };
       await sendTelegramMessage(
         chatId,
         "<b>🚗 Spinny Price Bot</b>\n\n" +
         "Commands:\n" +
         "• /update – Get latest car prices\n" +
-        "• /price – Get latest car prices\n" +
         "• /help – Show this help\n\n" +
-        "You can also say:\n" +
-        "• \"car price update\"\n" +
-        "• \"check price\"\n\n" +
         "<b>📋 Hair schedule</b>\n" +
-        "• \"What's today's plan?\" – full plan for today\n" +
-        "• \"What's tomorrow's plan?\" – plan for tomorrow\n" +
-        "• \"What's next?\" – next upcoming item"
+        "• Today's plan – full plan for today\n" +
+        "• Tomorrow's plan – plan for tomorrow\n" +
+        "• What's next – next upcoming item\n\n" +
+        "👇 Tap the buttons below to use quickly!",
+        keyboard,
       );
     } else {
       const hair = isHairScheduleQuery(text);
