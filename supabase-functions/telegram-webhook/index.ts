@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 // Configuration - set these as Supabase Edge Function secrets
 // supabase secrets set TELEGRAM_BOT_TOKEN=xxx GITHUB_TOKEN=xxx
-const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")!;
+const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || "8471959636:AAEP12fzCELcYBGHAyuI4Z_fsysa_QCqHu8";
 const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN")!;
 const GITHUB_REPO = "akzarma/telegram-alerts";
 const ALLOWED_CHAT_ID = Number(Deno.env.get("ALLOWED_CHAT_ID")) || 676465574;
