@@ -114,8 +114,9 @@ function getNextSlot(day: number, hour: number, minute: number): string {
   );
 }
 
-function isHairScheduleQuery(text: string): "today" | "next" | false {
+function isHairScheduleQuery(text: string): "today" | "tomorrow" | "next" | false {
   const t = text.replace(/[?\s]+/g, " ").trim();
+  if (/\b(tomorrow'?s? plan|tomorrow plan|what'?s? tomorrow'?s? plan)\b/i.test(t)) return "tomorrow";
   if (/\b(today'?s? plan|today plan|what'?s? today'?s? plan)\b/i.test(t)) return "today";
   if (/\b(hair schedule|hair plan)\b/i.test(t) && (/\b(today|plan)\b/i.test(t) || t.length < 25)) return "today";
   if (/\bwhat'?s? next\b/i.test(t) && (/\bhair\b/i.test(t) || /\bschedule\b/i.test(t))) return "next";
@@ -212,13 +213,21 @@ Deno.serve(async (req: Request) => {
         "• \"check price\"\n\n" +
         "<b>📋 Hair schedule</b>\n" +
         "• \"What's today's plan?\" – full plan for today\n" +
+        "• \"What's tomorrow's plan?\" – plan for tomorrow\n" +
         "• \"What's next?\" – next upcoming item"
       );
     } else {
       const hair = isHairScheduleQuery(text);
       if (hair) {
         const ist = getIST();
-        const msg = hair === "today" ? getTodaysPlan(ist.day) : getNextSlot(ist.day, ist.hour, ist.minute);
+        let msg: string;
+        if (hair === "today") {
+          msg = getTodaysPlan(ist.day);
+        } else if (hair === "tomorrow") {
+          msg = getTodaysPlan((ist.day + 1) % 7).replace("Today's plan", "Tomorrow's plan");
+        } else {
+          msg = getNextSlot(ist.day, ist.hour, ist.minute);
+        }
         await sendTelegramMessage(chatId, msg);
       }
     }
