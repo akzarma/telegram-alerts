@@ -45,13 +45,16 @@ function getIST(): { day: number; hour: number; minute: number } {
 function getTodaysPlan(day: number): string {
   const dayName = DAYS[day];
   const lunch = day === 5 ? "Meganeuron OD+ + Uprise D3" : "Meganeuron OD+";
-  const night = NIGHT_BY_DAY[day] ?? "—";
+  const hasNight = day in NIGHT_BY_DAY;
   const hasBath = BATH_DAYS.has(day);
   const bathLine = hasBath
     ? " 10 AM  | Bath    | Ketoclenz CT (3) 5 min + regular shampoo\n"
     : "";
-  const nightLine = night !== "—"
-    ? " 9 PM   | Night   | " + night + "\n"
+  const eveningLine = hasNight
+    ? " 7 PM  | Evening | — skip AGA Pro (overnight treatment tonight)\n"
+    : " 7 PM  | Evening | AGA Pro 6 sprays\n";
+  const nightLine = hasNight
+    ? " 9 PM  | Night   | " + NIGHT_BY_DAY[day] + "\n"
     : "";
   return (
     "<b>📋 Today's plan – " + dayName + "</b>\n\n" +
@@ -62,7 +65,7 @@ function getTodaysPlan(day: number): string {
     " 8 AM  | Morning | AGA Pro 6 sprays\n" +
     bathLine +
     " 2 PM  | Lunch   | " + lunch + "\n" +
-    " 7 PM  | Evening | AGA Pro 6 sprays\n" +
+    eveningLine +
     nightLine +
     "</pre>"
   );
@@ -88,10 +91,12 @@ function getNextSlot(day: number, hour: number, minute: number): string {
   }
   slots.push(
     { hour: 14, min: 0, label: "Lunch", item: day === 5 ? "Meganeuron OD+ + Uprise D3" : "Meganeuron OD+" },
-    { hour: 19, min: 0, label: "Evening", item: "AGA Pro 6 sprays" },
   );
   if (hasNight) {
+    // Skip evening AGA Pro on overnight treatment nights
     slots.push({ hour: 21, min: 0, label: "Night", item: NIGHT_BY_DAY[day] ?? "" });
+  } else {
+    slots.push({ hour: 19, min: 0, label: "Evening", item: "AGA Pro 6 sprays" });
   }
 
   const nowMins = hour * 60 + minute;

@@ -65,6 +65,13 @@ def run_lunch() -> str:
 
 
 def run_evening() -> str:
+    """7 PM – AGA Pro, but skip on nights with overnight treatment (Mon/Wed/Fri/Sun)."""
+    wd = _weekday()
+    if wd in NIGHT_BY_DAY:
+        return (
+            f"🌇 Hair schedule – Evening 7 PM ({_day_name()})\n"
+            "• Skip AGA Pro tonight (overnight treatment later)"
+        )
     return (
         f"🌇 Hair schedule – Evening 7 PM ({_day_name()})\n"
         "• AGA Pro 6 sprays"

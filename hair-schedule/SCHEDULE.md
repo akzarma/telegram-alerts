@@ -23,7 +23,7 @@
 | **8 AM** (Morning) | AGA Pro (4) 6 sprays | — |
 | **2 PM** (After lunch) | Meganeuron OD+ (6) | Daily |
 | **2 PM** (Fri only) | Uprise D3 (7) | Weekly, Friday |
-| **7 PM** (Evening) | AGA Pro (4) 6 sprays | — |
+| **7 PM** (Evening) | AGA Pro (4) 6 sprays | **Skip on Mon/Wed/Fri/Sun** (overnight treatment night) |
 
 ---
 
