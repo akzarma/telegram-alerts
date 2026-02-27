@@ -75,7 +75,6 @@ def fetch_city(city: str) -> dict:
 
 def run() -> str | None:
     """Search all cities for Tiguan and return formatted message."""
-    city_lines = []
     car_details = []
     total_found = 0
 
@@ -83,16 +82,11 @@ def run() -> str | None:
         data = fetch_city(city)
         count = data["count"]
 
-        if count < 0:
-            city_lines.append(f"❌ {city.replace('-', ' ').title()}")
-            continue
-
-        if count == 0:
-            city_lines.append(f"⚪ {city.replace('-', ' ').title()}: 0")
+        if count <= 0:
             continue
 
         total_found += count
-        city_lines.append(f"🟢 {city.replace('-', ' ').title()}: <b>{count}</b>")
+        city_name = city.replace("-", " ").title()
 
         for car in data["results"]:
             emoji, status = get_status(car)
@@ -106,24 +100,26 @@ def run() -> str | None:
             hub = car.get("hub", "") or ""
 
             lines = [
-                f"  <b>{year} {car.get('model', 'Tiguan')} {variant}</b>",
-                f"  {fuel} | {mileage} km | {price}",
-                f"  {emoji} {status} | {hub}",
+                f"<b>{year} {car.get('model', 'Tiguan')} {variant}</b>",
+                f"📍 {city_name} | {fuel} | {mileage} km",
+                f"{emoji} {status} | {price}",
             ]
+            if hub:
+                lines.append(f"🏢 {hub}")
             if url:
-                lines.append(f"  <a href='{url}'>View →</a>")
+                lines.append(f"<a href='{url}'>View →</a>")
             car_details.append("\n".join(lines))
 
     now = datetime.now().strftime("%d %b %Y, %I:%M %p")
 
-    msg = [f"<b>🔍 Tiguan Search ({total_found} found)</b>", ""]
-    msg.append("\n".join(city_lines))
+    if total_found == 0:
+        msg = [f"<b>🔍 Tiguan Search</b>", "", f"No Tiguans found across {len(CITIES)} cities."]
+    else:
+        msg = [f"<b>🔍 Tiguan Search ({total_found} found)</b>"]
 
     if car_details:
         msg.append("")
-        msg.append("─────────────")
-        msg.append("")
-        msg.append("\n\n".join(car_details))
+        msg.append("\n\n─────────────\n\n".join(car_details))
 
     msg.append("")
     msg.append(f"<i>Updated: {now}</i>")
