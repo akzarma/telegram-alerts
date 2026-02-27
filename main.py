@@ -5,7 +5,7 @@ Runs all alert scripts and sends notifications via Telegram.
 """
 
 import sys
-from scripts import spinny_price
+from scripts import spinny_price, tiguan_search
 from utils.telegram import send_message
 
 
@@ -23,11 +23,13 @@ def main():
     else:
         messages.append("⚠️ Failed to fetch Spinny car price")
     
-    # Add more scripts here in the future:
-    # from scripts import another_tracker
-    # msg = another_tracker.run()
-    # if msg:
-    #     messages.append(msg)
+    # Run Tiguan city search
+    print("Running Tiguan city search...")
+    tiguan_msg = tiguan_search.run()
+    if tiguan_msg:
+        messages.append(tiguan_msg)
+    else:
+        messages.append("⚠️ Failed to search Tiguan availability")
     
     # Send all messages
     if messages:
