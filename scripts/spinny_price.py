@@ -10,7 +10,6 @@ from datetime import datetime
 # Cars to track - add more IDs here
 CARS = [
     {"id": "25264538", "label": "VW Tiguan"},      # 2018 Volkswagen Tiguan Highline TDI
-    {"id": "24138859", "label": "Skoda Superb"},   # 2021 Skoda Superb L&K AT
 ]
 
 API_BASE = "https://api.spinny.com/v3/api/pdp/price-breakdown/{}/v2/"
